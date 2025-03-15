@@ -21,7 +21,7 @@ EspressiScale is a minimalist and affordable espresso scale designed to provide 
    cd EspressiScale
 
 3. **PlatformIO setup in Visual Studio**
-   This project uses PlatformIO in Visual Studio. Make sure you have PlatformIO installed in Visual Studio.
+   Make sure you have PlatformIO installed in Visual Studio. You'll also need espressif platform installed.
 
 ## Usage
 **Touch controls:**
