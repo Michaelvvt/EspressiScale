@@ -14,18 +14,22 @@ see: "link"
 
 ## Installation
 
-1. **Clone the repository:**
+1.**PlatformIO setup in Visual Studio**
+   Make sure you have PlatformIO installed in Visual Studio. You'll also need espressif platform installed.
+   
+2. **Clone the repository:**
 
    ```bash
    git clone https://github.com/your-username/EspressiScale.git
 
-2. **Navigate to the project folder**
+3. **Navigate to the project folder**
 
    ```bash
    cd EspressiScale
 
-3. **PlatformIO setup in Visual Studio**
-   Make sure you have PlatformIO installed in Visual Studio. You'll also need espressif platform installed.
+4. **Build and upload to esp32**
+
+
 
 ## Usage
 **Touch controls:**
