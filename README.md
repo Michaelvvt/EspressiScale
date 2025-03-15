@@ -28,7 +28,9 @@ see: "link"
    ```bash
    cd EspressiScale
 
-5. **Build and upload**
+5. **Open project in PlatformIO**
+
+6. **Build and upload**
 
 
 
