@@ -50,4 +50,4 @@ This project is licensed under the MIT License
 ## Contact
 If you have any questions or suggestions, you can:
 - Open an issue in the GitHub repository
-- Contact me directly at [hasse.gudmestad@hotmail.com]
+- Contact me directly at [hasse.g.g@hotmail.com]
