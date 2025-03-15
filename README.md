@@ -21,7 +21,7 @@ see: "link"
 3. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/EspressiScale.git
+   git clone https://github.com/whauu/EspressiScale.git
 
 4. **Navigate to the project folder**
 
