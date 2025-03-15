@@ -1,8 +1,8 @@
 #pragma once
 
 
-#define WIFI_SSID             "Kristinsvei 31C"
-#define WIFI_PASSWORD         "Skole2022"
+#define WIFI_SSID             "SSID"
+#define WIFI_PASSWORD         "Password"
 
 #define WIFI_CONNECT_WAIT_MAX (30 * 1000)
 

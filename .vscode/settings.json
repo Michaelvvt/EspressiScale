@@ -1,3 +1,4 @@
 {
-    "C_Cpp.dimInactiveRegions": true
+    "C_Cpp.dimInactiveRegions": true,
+    "cmake.sourceDirectory": "C:/Users/hasse/Documents/EspressiScale/lib/lvgl"
 }
