@@ -24,9 +24,9 @@ EspressiScale is a minimalist and affordable espresso scale designed to provide 
    This project uses PlatformIO in Visual Studio. Make sure you have PlatformIO installed in Visual Studio.
 
 ## Usage
-- **Touch controls:**
-  - **Left Display:** Starts and stops timer
-  - **Right Display:** Tares weight and time
+**Touch controls:**
+- **Left Display:** Starts and stops timer
+- **Right Display:** Tares weight and resets timer
 
 ## License
 This project is licensed under the MIT License
