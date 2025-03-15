@@ -4,7 +4,7 @@
 #define LOADCELL_DOUT_PIN  4
 #define LOADCELL_SCK_PIN   3
 #define LOADCELL_POWER_PIN 6
-float calibration_factor = 4220.0; // eksempelverdi
+float calibration_factor = 4220.0; // Put your own calibration factor here
 
 HX711 scale;
 
