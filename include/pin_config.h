@@ -1,6 +1,6 @@
 #pragma once
 
-
+/*
 #define WIFI_SSID             "SSID"
 #define WIFI_PASSWORD         "Password"
 
@@ -11,6 +11,7 @@
 #define GMT_OFFSET_SEC        0
 #define DAY_LIGHT_OFFSET_SEC  0
 #define GET_TIMEZONE_API      "https://ipapi.co/timezone/"
+*/
 
 #define LV_DELAY(x)                                                                                                                                  \
   do {                                                                                                                                               \

@@ -113,7 +113,7 @@ void setup()
 {
   touch_eg = xEventGroupCreate();
 
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, 0); // Assuming touch interrupt is connected to GPIO 12
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, 0); // Touch interrupt is connected to GPIO 12
 
   Serial.begin(921600);
   Serial.println("HX711 with median filter and exponential smoothing");
