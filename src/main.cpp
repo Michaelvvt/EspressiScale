@@ -10,7 +10,6 @@
 #include "lvgl.h"
 #include "pin_config.h"
 #include "SPI.h"
-#include "time_date.h"
 #include "time.h"
 #include "sntp.h"
 #define TOUCH_MODULES_CST_SELF
