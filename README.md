@@ -15,4 +15,23 @@ EspressiScale is a minimalist and affordable espresso scale designed to provide 
    ```bash
    git clone https://github.com/your-username/EspressiScale.git
 
-2. **Build and upload**
+2. **Navigate to the project folder**
+
+   ```bash
+   cd EspressiScale
+
+3. **PlatformIO setup in Visual Studio**
+   This project uses PlatformIO in Visual Studio. Make sure you have PlatformIO installed in Visual Studio.
+
+## Usage
+- **Touch controls:**
+  - **Left Display:** Starts and stops timer
+  - **Right Display:** Tares weight and time
+
+## License
+This project is licensed under the MIT License
+
+## Contact
+If you have any questions or suggestions, you can:
+- Open an issue in the GitHub repository
+- Contact me directly at [hasse.gudmestad@hotmail.com]
