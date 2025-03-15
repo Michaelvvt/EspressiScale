@@ -9,8 +9,8 @@ EspressiScale is a minimalist and affordable espresso scale designed to provide 
 - **Minimalist Design:** A simple and modern solution focusing on essential features.
 
 ## Makerworld
-This was also published on makerworld for easy 3d printing.
-see: "link"
+This was also published on [makerworld](https://makerworld.com/en/models/1212476-espressiscale-small-minimalist-espresso-scale#profileId-1227630) for easy 3d printing.
+
 
 ## Installation
 
