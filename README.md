@@ -8,6 +8,10 @@ EspressiScale is a minimalist and affordable espresso scale designed to provide 
 - **Built-in Timer:** Monitors brewing time to ensure optimal extraction.
 - **Minimalist Design:** A simple and modern solution focusing on essential features.
 
+## Makerworld
+This was also published on makerworld for easy 3d printing.
+see: "link"
+
 ## Installation
 
 1. **Clone the repository:**
