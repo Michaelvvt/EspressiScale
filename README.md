@@ -14,3 +14,5 @@ EspressiScale is a minimalist and affordable espresso scale designed to provide 
 
    ```bash
    git clone https://github.com/your-username/EspressiScale.git
+
+2. **Build and upload**
