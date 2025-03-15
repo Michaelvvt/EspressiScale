@@ -28,7 +28,7 @@ see: "link"
    ```bash
    cd EspressiScale
 
-5. **Build and upload to esp32**
+5. **Build and upload**
 
 
 
