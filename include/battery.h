@@ -1,0 +1,2 @@
+void setupBattery();
+float getBatteryVoltage();

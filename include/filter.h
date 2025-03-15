@@ -1,0 +1,2 @@
+float medianFilter();
+float filteredWeight;
