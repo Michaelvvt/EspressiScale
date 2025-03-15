@@ -31,6 +31,11 @@ see: "link"
 **Touch controls:**
 - **Left Display:** Starts and stops timer
 - **Right Display:** Tares weight and resets timer
+  
+**Power:**
+  - Touch the display anywhere to wake it up
+  - The scale will automatically enter deep sleep after 5min with no use
+  
 
 ## License
 This project is licensed under the MIT License
