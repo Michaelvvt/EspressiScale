@@ -17,11 +17,6 @@ void setupScale(){
   scale.tare(); 
 }
 
-void tareScale(){
-  delay(500);
-  scale.tare();
-}
-
 float updateScale(){
   return scale.get_units();
 }

@@ -196,7 +196,7 @@ void setup()
   label_timer = lv_label_create(lv_scr_act());
   lv_obj_set_style_text_font(label_timer, &lv_font_montserrat_48, LV_PART_MAIN);
   lv_obj_align(label_timer, LV_ALIGN_LEFT_MID, 10, 0); // Align to the left
-  tareScale(); // Tare the scale before starting the loop (Had some issues with scale taring the wrong value)
+  scale.tare(); // Tare the scale before starting the loop (Had some issues with scale taring the wrong value)
 }
 
 void loop()
@@ -228,7 +228,18 @@ void loop()
     {
       timer_running = false; // Stop the timer
       timer = 0; // Reset timer
-      tareScale(); // Tare the scale
+      xTaskCreate( // To prevent halting the loop
+        [] (void * parameter) {
+          delay(300); // Debounce delay
+          scale.tare(); // Tare the scale
+          vTaskDelete(NULL); // Delete the task once done
+        },
+        "TareTask", // Task name
+        10000, // Stack size
+        NULL, // Task parameter
+        1, // Task priority
+        NULL // Task handle
+      );
       Serial.println("Tared and timer reset via touch");
     }
   }
