@@ -3,7 +3,6 @@
 #include <battery.h>
 #include <scale.h>
 #include <filter.h>
-#include <Wifi.h>
 #include <config.h>
 #include <ota.h>
 #include "jd9613.h"
@@ -15,12 +14,13 @@
 #define TOUCH_MODULES_CST_SELF
 #include "TouchLib.h"
 #include "Wire.h"
+#include "wifiManager.h"
 
 #ifndef BOARD_HAS_PSRAM
 #error "Please turn on PSRAM option to OPI PSRAM"
 #endif
 
-WiFiServer server(80);
+WiFiManager wifiManager;
 String header;
 
 static const uint16_t screenWidth = 294 * 2; // screenWidth = 294 * 2;
@@ -108,6 +108,17 @@ static void lv_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data
   }
 }
 
+void startWifi(void * parameter){
+  wifiManager.setConnectRetries(10);
+  wifiManager.autoConnect("EspressiScale");
+
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  setupOTA();
+vTaskDelete(NULL);
+}
+
 void setup()
 {
   touch_eg = xEventGroupCreate();
@@ -157,30 +168,6 @@ void setup()
   setupScale();
   setupBattery();
 
-  // Connect to Wi-Fi network with SSID and password
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-  unsigned long startAttemptTime = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 30000) // 30 seconds timeout
-  {
-    delay(500);
-    Serial.print(".");
-  }
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.println("Failed to connect to WiFi. Restarting...");
-    ESP.restart();
-  }
-  // Print local IP address and start web server
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  server.begin();
-
-  setupOTA();
-
   // Clear the display after showing the logo
   lv_obj_clean(lv_scr_act());
 
@@ -196,7 +183,16 @@ void setup()
   label_timer = lv_label_create(lv_scr_act());
   lv_obj_set_style_text_font(label_timer, &lv_font_montserrat_48, LV_PART_MAIN);
   lv_obj_align(label_timer, LV_ALIGN_LEFT_MID, 10, 0); // Align to the left
-  tareScale(); // Tare the scale before starting the loop (Had some issues with scale taring the wrong value)
+  
+  xTaskCreatePinnedToCore(
+    startWifi, // Function to run on this task
+    "startWifi", // Task name
+    10000, // Stack size
+    NULL, // Task parameter
+    1, // Task priority
+    NULL, // Task handle
+    0 // Task core
+  );
 }
 
 void loop()
