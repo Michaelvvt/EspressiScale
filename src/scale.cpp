@@ -17,6 +17,10 @@ void setupScale(){
   scale.tare(); 
 }
 
+void reTareScale(){
+  scale.tare();
+}
+
 void tareScale(){
   //delay(500);
   int times = 20;
@@ -38,9 +42,6 @@ void tareScale(){
     }
     lastSum = sum;
     scale.set_offset(sum); // Set the scale to 0.0
-    
-		// Probably will do no harm on AVR but will feed the Watchdog Timer (WDT) on ESP.
-		// https://github.com/bogde/HX711/issues/73
 		delay(0);
 	}
 }
