@@ -1,10 +1,7 @@
 #include "arduino.h"
-#include <HX711.h>
 #include <battery.h>
 #include <scale.h>
 #include <filter.h>
-#include <config.h>
-#include <ota.h>
 #include "jd9613.h"
 #include "lvgl.h"
 #include "pin_config.h"
@@ -15,6 +12,7 @@
 #include "TouchLib.h"
 #include "Wire.h"
 #include "wifiManager.h"
+#include <PrettyOTA.h>
 
 #ifndef BOARD_HAS_PSRAM
 #error "Please turn on PSRAM option to OPI PSRAM"
@@ -22,6 +20,9 @@
 
 WiFiManager wifiManager;
 String header;
+
+AsyncWebServer  server(80); // Server on port 80 (HTTP)
+PrettyOTA       OTAUpdates;
 
 static const uint16_t screenWidth = 294 * 2; // screenWidth = 294 * 2;
 static const uint16_t screenHeight = 126;
@@ -115,7 +116,10 @@ void startWifi(void * parameter){
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 
-  setupOTA();
+  OTAUpdates.Begin(&server);
+  server.begin();
+  OTAUpdates.OverwriteAppVersion("1.0.0");
+
 vTaskDelete(NULL);
 }
 
@@ -253,8 +257,6 @@ void loop()
   char timer_str[16];
   snprintf(timer_str, sizeof(timer_str), "%d s", timer);
   lv_label_set_text(label_timer, timer_str);
-  
-  handleOTA();
 
   // Handle LittlevGL tasks
   lv_task_handler();
