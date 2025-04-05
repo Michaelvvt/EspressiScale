@@ -125,7 +125,11 @@ static void lv_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data
 
 void startWifi(void * parameter){
   wifiManager.setConnectRetries(10);
-  wifiManager.autoConnect("EspressiScale");
+  // Set timeout for the configuration portal
+  wifiManager.setConfigPortalTimeout(300); // 5 minutes timeout
+  
+  // Use a default password for the AP for better security
+  wifiManager.autoConnect("EspressiScale", "Espress1Scale");
 
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());

@@ -85,6 +85,19 @@ This was also published on [makerworld](https://makerworld.com/en/models/1212476
     - Compatible with apps that support Acaia scales like Fellow, Artisan, and others
     - Provides the same functionality (weight, timer, tare) using the widely-supported Acaia protocol
 
+**WiFi Configuration:**
+  - EspressiScale creates a WiFi access point named "EspressiScale"
+  - Default password: `Espress1Scale`
+  - Connect to this network and your device should be redirected to a configuration portal
+  - If not automatically redirected, open a browser and navigate to `192.168.4.1`
+  - Follow the prompts to connect EspressiScale to your home WiFi network
+  - Once connected, the scale's IP address will be displayed in the serial monitor
+
+**Firmware Updates:**
+  - After connecting EspressiScale to your WiFi network, access the update page by navigating to:
+    `http://[scale-ip]/update` in your browser
+  - Use this page to upload new firmware (.bin files)
+
 **Update:**
    - Update using "scaleIP"/update
    - Build updated project
@@ -157,3 +170,10 @@ When in Acaia-compatible mode, EspressiScale should work with most apps that sup
 - Many espresso machine companion apps
 
 **Note:** This compatibility mode is provided for convenience. For the best experience with dedicated Acaia apps, consider using a genuine Acaia scale.
+
+## Troubleshooting
+
+**WiFi Connection Issues:**
+- If you cannot connect to your WiFi network, the scale will remain in access point mode for 5 minutes
+- Connect to the "EspressiScale" network (password: `Espress1Scale`) to try again
+- If you need to reset the WiFi configuration, restart the scale
