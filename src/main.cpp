@@ -50,6 +50,11 @@ extern uint8_t espressiscale_right_map[];
 
 TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS820_SLAVE_ADDRESS);
 
+// Add these variables at the top of the file, with other variables
+static unsigned long touch_start_time = 0;
+static bool long_press_detected = false;
+static const unsigned long LONG_PRESS_DURATION = 3000; // 3 seconds for long press
+
 void my_print(const char *buf)
 {
   Serial.printf(buf);
@@ -201,7 +206,7 @@ void setup()
 
   setupScale();
   setupBattery();
-  setupBLE(); // Initialize BLE service
+  setupBLE(); // Initialize BLE service with default mode (EspressiScale)
 
   // Clear the display after showing the logo
   lv_obj_clean(lv_scr_act());
@@ -254,34 +259,107 @@ void loop()
     TP_Point t = touch.getPoint(0);
     int16_t x = t.y; // Adjusted to match the screen orientation
 
-    if (x > screenWidth / 2)
-    {
-      timer_running = !timer_running; // Toggle timer state
-      if (timer_running) {
-        Serial.println("Timer started via touch");
+    // Start timing for long press detection
+    if (touch_start_time == 0) {
+      touch_start_time = millis();
+      long_press_detected = false;
+    }
+    
+    // Check for long press (3+ seconds)
+    if (!long_press_detected && (millis() - touch_start_time > LONG_PRESS_DURATION)) {
+      long_press_detected = true;
+      
+      // Toggle BLE protocol mode
+      BLEProtocolMode currentMode = getBLEProtocolMode();
+      BLEProtocolMode newMode = (currentMode == BLEProtocolMode::ESPRESSISCALE) ? 
+                                BLEProtocolMode::ACAIA : 
+                                BLEProtocolMode::ESPRESSISCALE;
+      
+      // Clear both displays
+      lv_obj_clean(lv_scr_act());
+      
+      // Create label for left display (BLE Mode:)
+      lv_obj_t* label_mode_left = lv_label_create(lv_scr_act());
+      lv_obj_set_style_text_font(label_mode_left, &lv_font_montserrat_28, LV_PART_MAIN);
+      lv_obj_set_width(label_mode_left, 294);  // Width of one display
+      lv_obj_align(label_mode_left, LV_ALIGN_LEFT_MID, 10, 0);
+      lv_label_set_text(label_mode_left, "BLE Mode:");
+      
+      // Create label for right display (actual mode)
+      lv_obj_t* label_mode_right = lv_label_create(lv_scr_act());
+      lv_obj_set_style_text_font(label_mode_right, &lv_font_montserrat_28, LV_PART_MAIN);
+      lv_obj_set_width(label_mode_right, 294);  // Width of one display
+      lv_obj_align(label_mode_right, LV_ALIGN_RIGHT_MID, -10, 0);
+      
+      // Set the mode text
+      if (newMode == BLEProtocolMode::ESPRESSISCALE) {
+        lv_label_set_text(label_mode_right, "EspressiScale");
       } else {
-        Serial.println("Timer stopped via touch");
+        lv_label_set_text(label_mode_right, "Acaia");
       }
-      delay(1000); // Debounce delay
+      
+      // Apply the change
+      setBLEProtocolMode(newMode);
+      
+      // Refresh the display
+      lv_refr_now(NULL);
+      delay(2000);
+      
+      // Recreate the normal UI
+      lv_obj_clean(lv_scr_act());
+      
+      // Set the background color to black
+      lv_obj_set_style_bg_color(lv_scr_act(), lv_color_black(), LV_PART_MAIN);
+      
+      // Create a label to display the weight
+      label_weight = lv_label_create(lv_scr_act());
+      lv_obj_set_style_text_font(label_weight, &lv_font_montserrat_48, LV_PART_MAIN);
+      lv_obj_align(label_weight, LV_ALIGN_RIGHT_MID, -10, 0);
+      
+      // Create a label to display the timer
+      label_timer = lv_label_create(lv_scr_act());
+      lv_obj_set_style_text_font(label_timer, &lv_font_montserrat_48, LV_PART_MAIN);
+      lv_obj_align(label_timer, LV_ALIGN_LEFT_MID, 10, 0); // Align to the left
+    }
+    else if (x > screenWidth / 2)
+    {
+      // Only process normal touch if not a long press
+      if (!long_press_detected) {
+        timer_running = !timer_running; // Toggle timer state
+        if (timer_running) {
+          Serial.println("Timer started via touch");
+        } else {
+          Serial.println("Timer stopped via touch");
+        }
+        delay(1000); // Debounce delay
+      }
     }
     else
     {
-      timer_running = false; // Stop the timer
-      timer = 0; // Reset timer
-      updateBLETimer(timer); // Update BLE with reset timer
-      xTaskCreate( // To prevent halting the loop
-        [] (void * parameter) {
-          tareScale(); // Tare the scale
-          vTaskDelete(NULL); // Delete the task once done
-        },
-        "TareTask", // Task name
-        10000, // Stack size
-        NULL, // Task parameter
-        1, // Task priority
-        NULL // Task handle
-      );
-      Serial.println("Tared and timer reset via touch");
+      // Only process normal touch if not a long press
+      if (!long_press_detected) {
+        timer_running = false; // Stop the timer
+        timer = 0; // Reset timer
+        updateBLETimer(timer); // Update BLE with reset timer
+        xTaskCreate( // To prevent halting the loop
+          [] (void * parameter) {
+            tareScale(); // Tare the scale
+            vTaskDelete(NULL); // Delete the task once done
+          },
+          "TareTask", // Task name
+          10000, // Stack size
+          NULL, // Task parameter
+          1, // Task priority
+          NULL // Task handle
+        );
+        Serial.println("Tared and timer reset via touch");
+      }
     }
+  }
+  else {
+    // Reset touch timing when no touch detected
+    touch_start_time = 0;
+    long_press_detected = false;
   }
 
   if (timer_running)

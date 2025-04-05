@@ -8,6 +8,7 @@ EspressiScale is a minimalist and affordable espresso scale designed to provide 
 - **Built-in Timer:** Monitors brewing time to ensure optimal extraction.
 - **Minimalist Design:** A simple and modern solution focusing on essential features.
 - **Bluetooth Connectivity:** Connect to Gaggiuino or other compatible devices to stream weight and timer data.
+- **Dual BLE Protocol Support:** Choose between native EspressiScale protocol or Acaia-compatible mode for wider app compatibility.
 
 ## Makerworld
 This was also published on [makerworld](https://makerworld.com/en/models/1212476-espressiscale-small-minimalist-espresso-scale#profileId-1227630) for easy 3D printing.
@@ -70,15 +71,19 @@ This was also published on [makerworld](https://makerworld.com/en/models/1212476
 **Touch controls:**
 - **Left Display:** Starts and stops timer
 - **Right Display:** Tares weight and resets timer
+- **Long Press (3 seconds):** Toggles between EspressiScale and Acaia-compatible BLE mode
   
 **Power:**
   - Touch the display anywhere to wake it up
   - The scale will automatically enter deep sleep after 5min with no use
 
 **Bluetooth:**
-  - The scale automatically advertises as "EspressiScale" via Bluetooth
-  - Compatible with Gaggiuino using the esp-arduino-ble-scales library
-  - You can remotely tare the scale, start/stop/reset the timer, and receive weight and timer data
+  - **EspressiScale mode:** The scale advertises as "EspressiScale" via Bluetooth
+    - Compatible with Gaggiuino using the esp-arduino-ble-scales library
+    - You can remotely tare the scale, start/stop/reset the timer, and receive weight and timer data
+  - **Acaia-compatible mode:** The scale advertises as "Acaia" and mimics Acaia scale BLE protocol
+    - Compatible with apps that support Acaia scales like Fellow, Artisan, and others
+    - Provides the same functionality (weight, timer, tare) using the widely-supported Acaia protocol
 
 **Update:**
    - Update using "scaleIP"/update
@@ -120,3 +125,35 @@ This project is licensed under the MIT License
 If you have any questions or suggestions, you can:
 - Open an issue in the GitHub repository
 - Contact me directly at [whauu@espressiscale.com]
+
+## BLE Protocol Modes
+
+EspressiScale supports two different Bluetooth Low Energy (BLE) protocol modes:
+
+1. **EspressiScale Native Protocol:**
+   - Default mode with custom UUIDs
+   - Designed specifically for EspressiScale
+   - Compatible with Gaggiuino and other systems that implement the EspressiScale protocol
+
+2. **Acaia-compatible Protocol:**
+   - Mimics the protocol used by Acaia scales
+   - Compatible with a wide range of existing coffee apps and equipment
+   - Provides immediate compatibility with apps like Fellow, Artisan, and many others
+
+### Switching Between Protocols
+
+To switch between BLE protocols:
+1. Long press on the scale display for 3 seconds
+2. The display will show the new protocol mode ("BLE Mode: EspressiScale" or "BLE Mode: Acaia")
+3. The scale will reconnect with the new protocol mode
+4. Connect your app to the scale (it will appear as "EspressiScale" or "Acaia" depending on mode)
+
+### Acaia App Compatibility
+
+When in Acaia-compatible mode, EspressiScale should work with most apps that support Acaia scales, including:
+- Fellow (iOS, Android)
+- Artisan Roaster Scope
+- Brewmaster
+- Many espresso machine companion apps
+
+**Note:** This compatibility mode is provided for convenience. For the best experience with dedicated Acaia apps, consider using a genuine Acaia scale.
