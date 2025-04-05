@@ -7,6 +7,7 @@ EspressiScale is a minimalist and affordable espresso scale designed to provide 
 - **Accurate Weighing:** Provides precise measurements for your espresso brewing.
 - **Built-in Timer:** Monitors brewing time to ensure optimal extraction.
 - **Minimalist Design:** A simple and modern solution focusing on essential features.
+- **Bluetooth Connectivity:** Connect to Gaggiuino or other compatible devices to stream weight and timer data.
 
 ## Makerworld
 This was also published on [makerworld](https://makerworld.com/en/models/1212476-espressiscale-small-minimalist-espresso-scale#profileId-1227630) for easy 3D printing.
@@ -74,6 +75,11 @@ This was also published on [makerworld](https://makerworld.com/en/models/1212476
   - Touch the display anywhere to wake it up
   - The scale will automatically enter deep sleep after 5min with no use
 
+**Bluetooth:**
+  - The scale automatically advertises as "EspressiScale" via Bluetooth
+  - Compatible with Gaggiuino using the esp-arduino-ble-scales library
+  - You can remotely tare the scale, start/stop/reset the timer, and receive weight and timer data
+
 **Update:**
    - Update using "scaleIP"/update
    - Build updated project
@@ -83,6 +89,29 @@ This was also published on [makerworld](https://makerworld.com/en/models/1212476
 </p>
 
 [PrettyOTA](https://github.com/LostInCompilation/PrettyOTA.git)
+
+## Gaggiuino Integration
+
+To integrate with Gaggiuino:
+
+1. Make sure your Gaggiuino firmware includes the [esp-arduino-ble-scales](https://github.com/kstam/esp-arduino-ble-scales) library
+2. Add the EspressiScale plugin to your Gaggiuino project by copying:
+   - `esp-arduino-ble-scales/src/scales/espressiscale.h`
+   - `esp-arduino-ble-scales/src/scales/espressiscale.cpp`
+3. Add the following to your Gaggiuino initialization code:
+   ```cpp
+   #include "scales/espressiscale.h"
+   
+   void setup() {
+     // ... other initialization code
+     
+     // Register the EspressiScale plugin
+     EspressiScalesPlugin::apply();
+     
+     // ... other setup code
+   }
+   ```
+4. Now your Gaggiuino should be able to automatically discover and connect to your EspressiScale
 
 ## License
 This project is licensed under the MIT License

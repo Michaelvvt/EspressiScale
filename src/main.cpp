@@ -13,6 +13,7 @@
 #include "Wire.h"
 #include "wifiManager.h"
 #include <PrettyOTA.h>
+#include "ble_service.h"
 
 #ifndef BOARD_HAS_PSRAM
 #error "Please turn on PSRAM option to OPI PSRAM"
@@ -32,6 +33,14 @@ static lv_color_t *buf = NULL;
 lv_obj_t *label_weight = NULL;
 lv_obj_t *label_timer = NULL; // New label for timer
 
+// Timer variables
+static int timer = 0; // Initialize timer to 0
+static bool timer_running = false; // Timer running state
+static unsigned long last_update = 0; // Last update time
+
+// For inactivity and deep sleep management
+static unsigned long last_activity_time = 0; // Last activity time
+static float lastWeight = 0; // Last weight value
 
 static EventGroupHandle_t touch_eg;
 #define GET_TOUCH_INT _BV(1)
@@ -120,7 +129,28 @@ void startWifi(void * parameter){
   server.begin();
   OTAUpdates.OverwriteAppVersion("1.0.0");
 
-vTaskDelete(NULL);
+  vTaskDelete(NULL);
+}
+
+// Timer control functions for BLE
+void startTimer() {
+  timer_running = true;
+  last_activity_time = millis(); // Reset the activity timer
+  Serial.println("Timer started via BLE");
+}
+
+void stopTimer() {
+  timer_running = false;
+  last_activity_time = millis(); // Reset the activity timer
+  Serial.println("Timer stopped via BLE");
+}
+
+void resetTimer() {
+  timer = 0;
+  timer_running = false;
+  updateBLETimer(timer);
+  last_activity_time = millis(); // Reset the activity timer
+  Serial.println("Timer reset via BLE");
 }
 
 void setup()
@@ -171,6 +201,7 @@ void setup()
 
   setupScale();
   setupBattery();
+  setupBLE(); // Initialize BLE service
 
   // Clear the display after showing the logo
   lv_obj_clean(lv_scr_act());
@@ -188,6 +219,9 @@ void setup()
   lv_obj_set_style_text_font(label_timer, &lv_font_montserrat_48, LV_PART_MAIN);
   lv_obj_align(label_timer, LV_ALIGN_LEFT_MID, 10, 0); // Align to the left
   
+  // Initialize the last activity time
+  last_activity_time = millis();
+  
   xTaskCreatePinnedToCore(
     startWifi, // Function to run on this task
     "startWifi", // Task name
@@ -203,31 +237,38 @@ void loop()
 {
   // Read filtered weight
   float currentWeight = medianFilter();
+  
+  // Update BLE with current weight
+  updateBLEWeight(currentWeight);
 
   // Update the label with the current weight
   char weight_str[16];
   snprintf(weight_str, sizeof(weight_str), "%.1f g", currentWeight);
   lv_label_set_text(label_weight, weight_str);
 
-  // Placeholder timer value
-  static int timer = 0; // Initialize timer to 0
-  static bool timer_running = false; // Timer running state
-  static unsigned long last_update = 0; // Last update time
-
   if (touch.read())
   {
+    // Any touch interaction should reset the activity timer
+    last_activity_time = millis();
+    
     TP_Point t = touch.getPoint(0);
     int16_t x = t.y; // Adjusted to match the screen orientation
 
     if (x > screenWidth / 2)
     {
       timer_running = !timer_running; // Toggle timer state
+      if (timer_running) {
+        Serial.println("Timer started via touch");
+      } else {
+        Serial.println("Timer stopped via touch");
+      }
       delay(1000); // Debounce delay
     }
     else
     {
       timer_running = false; // Stop the timer
       timer = 0; // Reset timer
+      updateBLETimer(timer); // Update BLE with reset timer
       xTaskCreate( // To prevent halting the loop
         [] (void * parameter) {
           tareScale(); // Tare the scale
@@ -250,41 +291,37 @@ void loop()
     {
       timer++;
       last_update = current_time;
+      
+      // Update BLE with current timer
+      updateBLETimer(timer);
     }
   }
 
-  // Update the label with the timer value
+  // Display the timer
   char timer_str[16];
   snprintf(timer_str, sizeof(timer_str), "%d s", timer);
   lv_label_set_text(label_timer, timer_str);
-
-  // Handle LittlevGL tasks
-  lv_task_handler();
-  delay(5);
-  static unsigned long last_activity_time = 0; // Last activity time
-  static float lastWeight = currentWeight; // Last weight value
-
-  // Check if the timer is not running and weight hasn't changed significantly
-  if (!timer_running && abs(currentWeight - lastWeight) < 1.0)
-  {
-    unsigned long current_time = millis();
-    if (current_time - last_activity_time >= 300000) // 5 minutes
-    {
-      Serial.println("Entering deep sleep due to inactivity...");
-      // Flush the screen to black before going to deep sleep
-      lv_obj_clean(lv_scr_act());
-      lv_obj_set_style_bg_color(lv_scr_act(), lv_color_black(), LV_PART_MAIN);
-      lv_refr_now(NULL); // Refresh the display immediately
-      esp_deep_sleep_start();
-    }
-  }
-  else
-  {
+  
+  // Check if the weight has changed significantly (indicating activity)
+  if (abs(currentWeight - lastWeight) >= 1.0) {
     last_activity_time = millis(); // Reset the activity timer
   }
-
-  lastWeight = currentWeight; // Update the last weight value
-
+  
+  // Check for inactivity
+  if (!timer_running && millis() - last_activity_time >= 300000) // 5 minutes
+  {
+    Serial.println("Entering deep sleep due to inactivity...");
+    // Flush the screen to black before going to deep sleep
+    lv_obj_clean(lv_scr_act());
+    lv_obj_set_style_bg_color(lv_scr_act(), lv_color_black(), LV_PART_MAIN);
+    lv_refr_now(NULL); // Refresh the display immediately
+    esp_deep_sleep_start();
+  }
+  
+  // Update last weight value
+  lastWeight = currentWeight;
+  
+  // Check battery status
   float batteryStatus = getBatteryVoltage(); // Update the battery status
   
   if (batteryStatus < 3) // Check if battery voltage is below 3V
@@ -300,4 +337,11 @@ void loop()
     lv_refr_now(NULL); // Refresh the display immediately
     esp_deep_sleep_start();
   }
+  
+  // Process BLE tasks
+  processBLE();
+
+  // LVGL task handler
+  lv_task_handler();
+  delay(10);
 }
