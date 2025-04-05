@@ -499,6 +499,20 @@ void updateBLETimer(float timer) {
  * It should be called regularly in the main loop.
  */
 void processBLE() {
-  // Handle any BLE tasks that need to be processed in the main loop
-  // Currently, this is empty as NimBLE handles most tasks internally
+  // No specific processing needed in this implementation
+  // Could be used for monitoring connections, handling disconnects, etc.
+}
+
+// Check if a client is currently connected to BLE
+bool isBLEConnected() {
+  static EspressiScaleServerCallbacks* serverCallbacks = nullptr;
+  
+  // Get server instance
+  NimBLEServer* pServer = NimBLEDevice::getServer();
+  if (!pServer) {
+    return false; // Server not initialized
+  }
+  
+  // In NimBLE, we can directly check if a client is connected
+  return pServer->getConnectedCount() > 0;
 } 

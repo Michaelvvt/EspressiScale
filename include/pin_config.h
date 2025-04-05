@@ -22,15 +22,42 @@
     }                                                                                                                                                \
   } while (0);
 
+// Only define these if not already defined in the board's pins_arduino.h
+#ifndef TFT_DC
 #define TFT_DC        16
-#define TFT_RES       15
-#define TFT_CS_0      13
-#define TFT_CS_1      14
-#define TFT_MOSI      18
-#define TFT_SCK       17
+#endif
 
+#ifndef TFT_RES
+#define TFT_RES       15
+#endif
+
+#ifndef TFT_CS_0
+#define TFT_CS_0      13
+#endif
+
+#ifndef TFT_CS_1
+#define TFT_CS_1      14
+#endif
+
+#ifndef TFT_MOSI
+#define TFT_MOSI      18
+#endif
+
+#ifndef TFT_SCK
+#define TFT_SCK       17
+#endif
 
 #define PIN_IIC_SCL   11
 #define PIN_IIC_SDA   10
 #define PIN_TOUCH_INT 12
 #define PIN_TOUCH_RES 9
+
+// Battery and power management pins
+#define PIN_BAT_ADC   2      // Battery voltage measurement ADC pin
+#define PIN_BAT_EN    15     // Battery enable pin
+#define PIN_CHARGING  -1     // Charging status pin (if available, set to actual pin or leave as -1)
+
+// Load cell pins for HX711
+#define LOADCELL_DOUT_PIN  4     // HX711 data pin 
+#define LOADCELL_SCK_PIN   3     // HX711 clock pin
+#define LOADCELL_POWER_PIN 6     // Power control pin for load cell

@@ -1,10 +1,14 @@
 #include <arduino.h>
 #include <scale.h>
+#include "filter.h"
 
 #define WINDOW_SIZE 5
 float sampleBuffer[WINDOW_SIZE];
 int sampleIndex = 0;
 bool bufferFilled = false;
+
+// Define the global filteredWeight variable
+float filteredWeight = 0.0f;
 
 // Function for finding median value in array
 float getMedian(float arr[], int n) {
@@ -43,7 +47,6 @@ float medianFilter(){
      float medianValue = getMedian(sampleBuffer, samples);
 
     // Exponential smoothing
-    static float filteredWeight = 0;
     float alpha = 0.7; // Higher alpha gives better response time but more noise, vice versa
     filteredWeight = alpha * medianValue + (1 - alpha) * filteredWeight;
     if (filteredWeight > -0.09 && filteredWeight < 0.09) {

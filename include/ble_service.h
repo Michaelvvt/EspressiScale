@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nimble_config.h" // Include our configuration first to disable problematic macros
 #include <NimBLEDevice.h>
 #include <NimBLEServer.h>
 #include <NimBLEUtils.h>
@@ -222,4 +223,11 @@ void updateBLETimer(float timer);
  * This function should be called regularly in the main application loop
  * to handle any BLE tasks that need periodic attention.
  */
-void processBLE(); 
+void processBLE();
+
+/**
+ * Check if a BLE device is currently connected
+ * 
+ * @return true if a client is connected, false otherwise
+ */
+bool isBLEConnected(); 

@@ -1,6 +1,8 @@
 #pragma once
 #include "stdint.h"
 
+// These values are used for internal coordinate calculations
+// The physical dimensions are different (40x160)
 #define TFT_WIDTH     126
 #define TFT_HEIGHT    294
 

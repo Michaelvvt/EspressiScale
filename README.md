@@ -6,9 +6,15 @@ EspressiScale is a minimalist and affordable espresso scale designed to provide 
 
 - **Accurate Weighing:** Provides precise measurements for your espresso brewing.
 - **Built-in Timer:** Monitors brewing time to ensure optimal extraction.
+- **Comprehensive Calibration System:** Multiple calibration modes including basic, multi-point, linearity testing, and repeatability verification.
+- **Power Management:** Optimized battery usage with automatic deep sleep and low-battery detection.
 - **Minimalist Design:** A simple and modern solution focusing on essential features.
 - **Bluetooth Connectivity:** Connect to Gaggiuino or other compatible devices to stream weight and timer data.
 - **Dual BLE Protocol Support:** Choose between native EspressiScale protocol or Acaia-compatible mode for wider app compatibility.
+- **Auto-Timer:** Automatically starts the timer when weight increases (configurable sensitivity).
+- **Persistent Settings:** All settings are saved across power cycles using EEPROM.
+- **Intuitive Menu System:** Easy access to settings with a modern UI design.
+- **Battery Monitoring:** Real-time battery level display with low-battery warnings.
 
 ## Makerworld
 This was also published on [makerworld](https://makerworld.com/en/models/1212476-espressiscale-small-minimalist-espresso-scale#profileId-1227630) for easy 3D printing.
@@ -21,7 +27,7 @@ This was also published on [makerworld](https://makerworld.com/en/models/1212476
 | 1        | Battery                     | Any 3.7v rechargeable lithium battery (<10x34x48)       |
 | 1        | [500g Load Cell](https://www.aliexpress.com/item/1005006390450639.html?spm=a2g0o.productlist.main.1.140c3ad4i723T1&algo_pvid=c0719cfc-035d-4043-bfff-a19c34d26db9&algo_exp_id=c0719cfc-035d-4043-bfff-a19c34d26db9-0&pdp_ext_f=%7B%22order%22%3A%2214%22%2C%22eval%22%3A%221%22%7D&pdp_npi=4%40dis%21EUR%213.13%211.24%21%21%2124.03%219.53%21%40211b61bb17420425268903777eb948%2112000036996330117%21sea%21NO%210%21ABX&curPageLogUid=1wjYKMejCK7S&utparam-url=scene%3Asearch%7Cquery_from%3A)            |                                                    |
 | 1        | [HX711](https://www.aliexpress.com/item/1005006293368575.html?spm=a2g0o.productlist.main.19.4b5474a6I3ualW&algo_pvid=8b13f76d-943b-4f75-8bf8-1741b29a8fbf&algo_exp_id=8b13f76d-943b-4f75-8bf8-1741b29a8fbf-9&pdp_ext_f=%7B%22order%22%3A%22487%22%2C%22eval%22%3A%221%22%7D&pdp_npi=4%40dis%21EUR%212.05%210.93%21%21%2115.75%217.18%21%40211b430817420419468811798eb8b9%2112000036639761167%21sea%21NO%210%21ABX&curPageLogUid=WayeqeRbhY4T&utparam-url=scene%3Asearch%7Cquery_from%3A)                     | High precision (available on AliExpress)           |
-|1         | [USB type C port](https://a.aliexpress.com/_EyspPbK)             | Not yet implimented
+|1         | [USB type C port](https://a.aliexpress.com/_EyspPbK)             | Not yet implemented
 | 4        | [M3x3.0 Threaded Inserts](https://cnckitchen.store/products/heat-set-insert-m3-x-3-short-version-100-pieces)     | (I used CNCkitchen)                                |
 | 2        | M3x10 Screws                |                                                    |
 | 2        | M3x12 Screws                |                                                    |
@@ -71,11 +77,42 @@ This was also published on [makerworld](https://makerworld.com/en/models/1212476
 **Touch controls:**
 - **Left Display:** Starts and stops timer
 - **Right Display:** Tares weight and resets timer
-- **Long Press (3 seconds):** Toggles between EspressiScale and Acaia-compatible BLE mode
+- **Long Press Both Sides (1.5 seconds):** Opens the settings menu
   
-**Power:**
+**Settings Menu:**
+- Navigate through settings by swiping up/down on the left display
+- Select options by touching them on the right display
+- Long press both sides again to exit the menu and save settings
+
+**Available Settings:**
+- **Auto-Timer:** OFF, LOCAL, or ALWAYS mode
+- **Sensitivity:** LOW, MEDIUM, or HIGH sensitivity for auto-timer
+- **BLE Protocol:** DEFAULT (EspressiScale) or ACAIA compatible mode
+- **Brightness:** LOW, MEDIUM, HIGH, or AUTO adjustment
+- **Sleep Timeout:** 2 MIN, 5 MIN, or 10 MIN before deep sleep
+- **Units:** GRAMS or OUNCES for weight display
+
+**Calibration System:**
+- Access the calibration menu to ensure accurate weight readings
+- Multiple calibration modes:
+  - **Basic Calibration:** Single point calibration for quick setup
+  - **Multi-Point Calibration:** For improved accuracy across weight ranges
+  - **Linearity Test:** Verify scale accuracy across different weights
+  - **Repeatability Test:** Check consistency of measurements
+  - **Drift Analysis:** Monitor stability over time
+  - **Tare Verification:** Validate tare functionality
+- Calibration quality indicators show the precision of your calibration
+
+**Auto-Timer Modes:**
+- **OFF:** Auto-timer functionality is disabled
+- **LOCAL:** Auto-timer works on the device but not via BLE
+- **ALWAYS:** Auto-timer is fully enabled including BLE integration
+
+**Power Management:**
   - Touch the display anywhere to wake it up
-  - The scale will automatically enter deep sleep after 5min with no use
+  - The scale will automatically enter deep sleep after the configured timeout with no use
+  - Real-time battery monitoring with voltage and percentage display
+  - Low battery warning when battery level drops below critical threshold
 
 **Bluetooth:**
   - **EspressiScale mode:** The scale advertises as "EspressiScale" via Bluetooth
@@ -131,6 +168,35 @@ To integrate with Gaggiuino:
    ```
 4. Now your Gaggiuino should be able to automatically discover and connect to your EspressiScale
 
+## Technical Details
+
+### Display System
+- Dual JD9613 OLED displays (294x126 each)
+- LVGL graphics library for modern UI components
+- Optimized for low-power operation with auto brightness options
+
+### Scale System
+- HX711 24-bit ADC for high-precision weight readings
+- Digital filtering for stable measurements
+- Median filtering to reduce noise
+- Support for different weight units (grams/ounces)
+
+### Power Management
+- Automatic deep sleep mode to conserve battery
+- Battery voltage monitoring with percentage calculation
+- Low battery detection and warnings
+- Power-efficient hardware design
+
+### Settings and Calibration
+- Non-volatile storage (EEPROM) for persistent settings
+- Comprehensive calibration system with multiple modes
+- Quality assessment of calibration status
+
+### BLE Communication
+- Dual protocol support (EspressiScale native and Acaia-compatible)
+- Real-time weight and timer notifications
+- Remote control of tare and timer functions
+
 ## License
 This project is licensed under the MIT License
 
@@ -177,3 +243,14 @@ When in Acaia-compatible mode, EspressiScale should work with most apps that sup
 - If you cannot connect to your WiFi network, the scale will remain in access point mode for 5 minutes
 - Connect to the "EspressiScale" network (password: `Espress1Scale`) to try again
 - If you need to reset the WiFi configuration, restart the scale
+
+**Calibration Issues:**
+- If weight readings seem inaccurate, use the multi-point calibration for best results
+- For repeated calibration errors, check the load cell connections
+- Make sure the scale is on a flat, stable surface during calibration
+- Using standard calibration weights is recommended for best accuracy
+
+**Battery Issues:**
+- If the scale doesn't power on, check battery connections
+- For short battery life, reduce the display brightness
+- In case of battery drain when not in use, check for proper deep sleep mode
