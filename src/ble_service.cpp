@@ -20,7 +20,7 @@ NimBLECharacteristic* pTimerCharacteristic = nullptr;
 NimBLECharacteristic* pCommandCharacteristic = nullptr;
 
 // Create server callbacks instance
-BLEServerCallbacks* pServerCallbacks = nullptr;
+EspressiScaleServerCallbacks* pServerCallbacks = nullptr;
 
 // Create command callbacks instance
 CommandCallbacks* pCommandCallbacks = nullptr;
@@ -38,7 +38,7 @@ extern void resetTimer();     // Resets the timer to zero
  * BLEServerCallbacks constructor
  * Initializes the connected state to false
  */
-BLEServerCallbacks::BLEServerCallbacks() {
+EspressiScaleServerCallbacks::EspressiScaleServerCallbacks() {
   _connected = false;
 }
 
@@ -49,7 +49,7 @@ BLEServerCallbacks::BLEServerCallbacks() {
  * 
  * @param pServer Pointer to the BLE server
  */
-void BLEServerCallbacks::onConnect(NimBLEServer* pServer) {
+void EspressiScaleServerCallbacks::onConnect(NimBLEServer* pServer) {
   _connected = true;
   Serial.println("BLE client connected");
 }
@@ -62,7 +62,7 @@ void BLEServerCallbacks::onConnect(NimBLEServer* pServer) {
  * 
  * @param pServer Pointer to the BLE server
  */
-void BLEServerCallbacks::onDisconnect(NimBLEServer* pServer) {
+void EspressiScaleServerCallbacks::onDisconnect(NimBLEServer* pServer) {
   _connected = false;
   Serial.println("BLE client disconnected");
   
@@ -139,7 +139,7 @@ void setupBLE() {
   pServer = NimBLEDevice::createServer();
   
   // Set server callbacks
-  pServerCallbacks = new BLEServerCallbacks();
+  pServerCallbacks = new EspressiScaleServerCallbacks();
   pServer->setCallbacks(pServerCallbacks);
   
   // Create the service

@@ -50,12 +50,12 @@ enum class BLECommand : uint8_t {
  * It maintains a connection state flag and automatically restarts advertising
  * when a client disconnects.
  */
-class BLEServerCallbacks : public NimBLEServerCallbacks {
+class EspressiScaleServerCallbacks : public NimBLEServerCallbacks {
 public:
   /**
    * Constructor initializes the connection state
    */
-  BLEServerCallbacks();
+  EspressiScaleServerCallbacks();
   
   /**
    * Called when a client connects to the server
