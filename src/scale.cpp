@@ -50,6 +50,7 @@ void tareScale(){
       if (stableCounter >= 3) { // Require 3 consecutive stable readings
         finished = true;
       }
+
     }
     else {
       stableCounter = 0;
@@ -67,4 +68,4 @@ float updateScale(){
 float getRawReading() {
   // Returns the raw, uncalibrated reading from the scale
   return scale.read_average(5) - scale.get_offset();
-}
+}}

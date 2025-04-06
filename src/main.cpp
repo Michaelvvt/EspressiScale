@@ -72,18 +72,18 @@ void my_print(const char *buf)
 inline void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
   uint32_t h = (area->y2 - area->y1 + 1);
-
+  
   int _w1 = 294 - area->x1;
   int _w2 = area->x2 - 294 + 1;
-
+  
   if (_w1 > 0)
   {
     TFT_CS_0_L;
     lcd_PushColors_SoftRotation(area->x1,
-                  area->y1,
-                  _w1,
-                  h,
-                  (uint16_t *)&color_p->full,
+                area->y1,
+                _w1,
+                h,
+                (uint16_t *)&color_p->full,
                   2); // Horizontal display
     TFT_CS_0_H;
   }
@@ -91,14 +91,14 @@ inline void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t
   {
     TFT_CS_1_L;
     lcd_PushColors_SoftRotation(0,
-                  area->y1,
-                  _w2,
-                  h,
-                  (uint16_t *)&color_p->full,
+                area->y1,
+                _w2,
+                h,
+                (uint16_t *)&color_p->full,
                   1); // Horizontal display
     TFT_CS_1_H;
   }
-
+  
   lv_disp_flush_ready(disp);
 }
 
@@ -123,7 +123,7 @@ static void lv_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data
       data->state = LV_INDEV_STATE_REL;
     else
       data->state = LV_INDEV_STATE_PR;
-  }
+    }
   else
   {
     data->state = LV_INDEV_STATE_REL;
@@ -144,7 +144,7 @@ void startWifi(void * parameter){
   OTAUpdates.Begin(&server);
   server.begin();
   OTAUpdates.OverwriteAppVersion("1.0.0");
-
+  
   vTaskDelete(NULL);
 }
 
