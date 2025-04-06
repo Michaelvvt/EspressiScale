@@ -5,7 +5,9 @@
 #define EEPROM_KEY_ADDR 0      // Address for "valid" key
 #define EEPROM_VALID_KEY 0xAB  // Key indicating valid settings
 #define EEPROM_SETTINGS_ADDR 1 // Start address for settings data
-#define EEPROM_SIZE 64         // Allocate 64 bytes for EEPROM
+#define EEPROM_SIZE 128        // Increase EEPROM size to store calibration factors
+#define EEPROM_ADS1256_CALIB_ADDR 64 // Address for ADS1256 calibration factors
+#define EEPROM_ADS1256_CALIB_KEY 0xCD // Key indicating valid ADS1256 calibration
 
 // Define the static member variables
 Preferences Settings::preferences;
@@ -189,4 +191,44 @@ ScaleType Settings::getScaleType() {
 
 bool Settings::isADS1256() {
   return scaleType == ScaleType::ADS1256;
+}
+
+void Settings::saveADS1256CalibrationFactors(float factors[4]) {
+  // Initialize EEPROM if not already done
+  EEPROM.begin(EEPROM_SIZE);
+  
+  // Write validation key
+  EEPROM.write(EEPROM_ADS1256_CALIB_ADDR, EEPROM_ADS1256_CALIB_KEY);
+  
+  // Write calibration factors
+  int addr = EEPROM_ADS1256_CALIB_ADDR + 1;
+  for (int i = 0; i < 4; i++) {
+    EEPROM.put(addr, factors[i]);
+    addr += sizeof(float);
+  }
+  
+  // Commit changes to flash
+  EEPROM.commit();
+}
+
+void Settings::loadADS1256CalibrationFactors(float factors[4]) {
+  // Initialize EEPROM if not already done
+  EEPROM.begin(EEPROM_SIZE);
+  
+  // Check for valid key
+  byte validKey = EEPROM.read(EEPROM_ADS1256_CALIB_ADDR);
+  
+  if (validKey == EEPROM_ADS1256_CALIB_KEY) {
+    // Read calibration factors
+    int addr = EEPROM_ADS1256_CALIB_ADDR + 1;
+    for (int i = 0; i < 4; i++) {
+      EEPROM.get(addr, factors[i]);
+      addr += sizeof(float);
+    }
+  } else {
+    // Initialize with default values if no valid data
+    for (int i = 0; i < 4; i++) {
+      factors[i] = 1.0f;
+    }
+  }
 } 

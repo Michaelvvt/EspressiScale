@@ -90,34 +90,30 @@ float getRawReadingHX711() {
 
 // ADS1256 implementation
 bool setupADS1256() {
-  pinMode(LOADCELL_POWER_PIN, OUTPUT);
-  digitalWrite(LOADCELL_POWER_PIN, HIGH);
-  
-  // Allow time for load cells to power up
-  delay(100);
-  
-  // Create ADS1256 instance if not already created
-  if (ads1256 == nullptr) {
-    ads1256 = new ADS1256(ADS1256_CS_PIN, ADS1256_DRDY_PIN, ADS1256_RESET_PIN);
+  // Initialize the ADS1256
+  if (ads1256 != nullptr) {
+    delete ads1256;
   }
   
-  // Initialize SPI and ADS1256
-  if (!ads1256->begin(ADS1256_GAIN_1, ADS1256_DRATE_100SPS)) {
-    Serial.println("ADS1256 initialization failed. Check wiring.");
+  ads1256 = new ADS1256(ADS1256_CS_PIN, ADS1256_DRDY_PIN, ADS1256_RESET_PIN);
+  
+  if (!ads1256->begin()) {
     isADS1256Initialized = false;
     return false;
   }
   
-  // Set reference voltage (typical value for load cell applications)
-  ads1256->setVref(5.0); // Most load cell amplifiers use 5V excitation
+  // Set reference voltage to 5V (adjust if your reference is different)
+  ads1256->setRefVoltage(5.0);
   
-  // Configure ADS1256 for 4 differential channels (4 load cells)
-  ads1256->setDataRate(ADS1256_DRATE_100SPS); // Set 100SPS data rate
+  // Set data rate (adjust as needed for your application)
+  ads1256->setDataRate(ADS1256_DRATE_100SPS);
   
-  // Initial tare to zero the scale
+  // Load saved calibration factors from EEPROM
+  Settings::loadADS1256CalibrationFactors(ads1256_calibration_factors);
+  
+  // Perform initial tare
   tareADS1256();
   
-  Serial.println("ADS1256 scale initialized successfully");
   isADS1256Initialized = true;
   return true;
 }
@@ -147,18 +143,52 @@ void tareADS1256() {
 }
 
 float updateADS1256() {
-  float totalWeight = 0.0;
-  float readings[4];
+  if (!isADS1256Initialized || ads1256 == nullptr) {
+    return 0.0f;
+  }
   
-  // Get readings from all 4 load cells
-  if (ads1256->readLoadCells(readings)) {
-    // Process each cell
-    for (int cell = 0; cell < 4; cell++) {
-      // Apply offset and calibration
-      cellReadings[cell] = (readings[cell] - cellOffsets[cell]) * ads1256_calibration_factors[cell];
+  const int MAX_RETRIES = 3;
+  const int RETRY_DELAY_MS = 50;
+  float totalWeight = 0.0f;
+  bool readingSuccess = false;
+  
+  for (int retry = 0; retry < MAX_RETRIES && !readingSuccess; retry++) {
+    // If retry, add a short delay
+    if (retry > 0) {
+      delay(RETRY_DELAY_MS);
+    }
+    
+    try {
+      float cellReadingsTemp[4];
       
-      // Add to total weight
-      totalWeight += cellReadings[cell];
+      // Try to read all load cells
+      if (ads1256->readLoadCells(cellReadingsTemp)) {
+        // Copy readings to main array
+        for (int cell = 0; cell < 4; cell++) {
+          cellReadings[cell] = cellReadingsTemp[cell];
+        }
+        readingSuccess = true;
+      } else if (retry == MAX_RETRIES - 1) {
+        // Last retry failed, return last successful reading
+        break;
+      }
+    } catch (...) {
+      // Catch any exceptions during reading
+      if (retry == MAX_RETRIES - 1) {
+        // Last retry failed, return last successful reading
+        break;
+      }
+    }
+  }
+  
+  // Process readings and calculate weight
+  if (readingSuccess) {
+    totalWeight = 0.0f;
+    
+    for (int cell = 0; cell < 4; cell++) {
+      // Apply offsets and calibration
+      float calibratedCellValue = (cellReadings[cell] - cellOffsets[cell]) / ads1256_calibration_factors[cell];
+      totalWeight += calibratedCellValue;
     }
   }
   
@@ -166,13 +196,42 @@ float updateADS1256() {
 }
 
 float getRawReadingADS1256() {
-  float totalRaw = 0.0;
-  float readings[4];
+  if (!isADS1256Initialized || ads1256 == nullptr) {
+    return 0.0f;
+  }
   
-  // Get raw sum of all cells without calibration factor
-  if (ads1256->readLoadCells(readings)) {
-    for (int cell = 0; cell < 4; cell++) {
-      totalRaw += (readings[cell] - cellOffsets[cell]);
+  const int MAX_RETRIES = 3;
+  const int RETRY_DELAY_MS = 50;
+  float totalRaw = 0.0f;
+  bool readingSuccess = false;
+  
+  for (int retry = 0; retry < MAX_RETRIES && !readingSuccess; retry++) {
+    // If retry, add a short delay
+    if (retry > 0) {
+      delay(RETRY_DELAY_MS);
+    }
+    
+    try {
+      float tempReadings[4];
+      
+      // Try to read all load cells
+      if (ads1256->readLoadCells(tempReadings)) {
+        // Sum up raw values
+        totalRaw = 0.0f;
+        for (int cell = 0; cell < 4; cell++) {
+          totalRaw += tempReadings[cell];
+        }
+        readingSuccess = true;
+      } else if (retry == MAX_RETRIES - 1) {
+        // Last retry failed, return 0
+        return 0.0f;
+      }
+    } catch (...) {
+      // Catch any exceptions during reading
+      if (retry == MAX_RETRIES - 1) {
+        // Last retry failed, return 0
+        return 0.0f;
+      }
     }
   }
   
@@ -236,6 +295,9 @@ void calibrateADS1256(float knownWeight) {
                 ads1256_calibration_factors[cell] = rawReadings[cell] / cellPortion;
             }
         }
+        
+        // Save calibration factors to EEPROM
+        Settings::saveADS1256CalibrationFactors(ads1256_calibration_factors);
     }
 }
 
@@ -286,21 +348,55 @@ float getRawReading() {
   }
 }
 
+// Add function to power down the ADS1256
+void powerDownADS1256() {
+  if (isADS1256Initialized && ads1256 != nullptr) {
+    // Put ADS1256 in standby mode
+    ads1256->sendCommand(ADS1256_CMD_STANDBY);
+    
+    // Power down the load cells
+    pinMode(LOADCELL_POWER_PIN, OUTPUT);
+    digitalWrite(LOADCELL_POWER_PIN, LOW);
+  }
+}
+
+// Add function to power up the ADS1256
+void powerUpADS1256() {
+  if (ads1256 != nullptr) {
+    // Power up the load cells
+    pinMode(LOADCELL_POWER_PIN, OUTPUT);
+    digitalWrite(LOADCELL_POWER_PIN, HIGH);
+    
+    // Allow time for load cells to stabilize
+    delay(100);
+    
+    // Wake up the ADS1256
+    ads1256->sendCommand(ADS1256_CMD_WAKEUP);
+    
+    // Reinitialize if necessary
+    if (!isADS1256Initialized) {
+      setupADS1256();
+    }
+  }
+}
+
+// Update the reinitializeScale function to include proper power management
 void reinitializeScale() {
   // Free previous resources
   if (ads1256 != nullptr) {
+    // Power down before deleting
+    powerDownADS1256();
     delete ads1256;
     ads1256 = nullptr;
   }
   
-  // Power down current scale
+  // Power down any scale on pins
   pinMode(LOADCELL_POWER_PIN, OUTPUT);
   digitalWrite(LOADCELL_POWER_PIN, LOW);
-  delay(100); // Give time for power down
   
-  // Re-initialize based on current settings
+  // Reinitialize
   setupScale();
   
-  // Tare the scale after reinitialization
+  // Tare to reset zero point
   tareScale();
 }

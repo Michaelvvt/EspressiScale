@@ -104,36 +104,16 @@ void ADS1256::setChannel(uint8_t channel_p, uint8_t channel_n) {
 }
 
 // Set channel with simplified interface
-void ADS1256::setChannelDiff(uint8_t channel, bool differential) {
-    uint8_t p_channel, n_channel;
-    
-    if (channel > 7) {
-        // Invalid channel
-        return;
+bool ADS1256::setChannelDiff(int8_t posChannel, int8_t negChannel) {
+    if (posChannel < 0 || posChannel > 7 || negChannel < 0 || negChannel > 7) {
+        return false;
     }
     
-    // Set up positive channel
-    switch (channel) {
-        case 0: p_channel = ADS1256_MUXP_AIN0; break;
-        case 1: p_channel = ADS1256_MUXP_AIN1; break;
-        case 2: p_channel = ADS1256_MUXP_AIN2; break;
-        case 3: p_channel = ADS1256_MUXP_AIN3; break;
-        case 4: p_channel = ADS1256_MUXP_AIN4; break;
-        case 5: p_channel = ADS1256_MUXP_AIN5; break;
-        case 6: p_channel = ADS1256_MUXP_AIN6; break;
-        case 7: p_channel = ADS1256_MUXP_AIN7; break;
-        default: p_channel = ADS1256_MUXP_AINCOM; break;
-    }
+    // Set mux register for differential reading
+    byte mux = (posChannel << 4) | negChannel;
+    writeRegister(ADS1256_REG_MUX, mux);
     
-    // For differential, use next channel. For single-ended, use AINCOM
-    if (differential) {
-        // For differential, pair channels 0-1, 2-3, 4-5, 6-7
-        n_channel = channel & 0x01 ? channel - 1 : channel + 1;
-    } else {
-        n_channel = ADS1256_MUXN_AINCOM;
-    }
-    
-    setChannel(p_channel >> 4, n_channel);
+    return true;
 }
 
 // Set PGA gain
@@ -235,14 +215,91 @@ float ADS1256::rawToVoltage(int32_t rawValue) {
     return (float)rawValue * (_vref / (8388608.0 * _gainValue));
 }
 
-// Read all 4 load cells
-bool ADS1256::readLoadCells(float values[4]) {
-    for (int i = 0; i < 4; i++) {
-        waitDRDY();
-        int32_t raw = readChannel(i, true); // Read differential channels 0-1, 2-3, 4-5, 6-7
-        values[i] = rawToVoltage(raw);
+// Add the load cell health check implementations
+bool ADS1256::checkLoadCellHealth(int cell, float *value) {
+    // Check if cell index is valid
+    if (cell < 0 || cell >= 4) {
+        return false;
     }
-    return true;
+    
+    // Define thresholds for health check
+    const float MIN_VALID_VALUE = -1000000.0f;
+    const float MAX_VALID_VALUE = 1000000.0f;
+    const float MAX_RATE_OF_CHANGE = 100000.0f; // Maximum reasonable change between readings
+    
+    // Read from the specific cell
+    float reading = 0.0f;
+    
+    // Use appropriate positive and negative channels for this cell
+    int8_t positiveChannel = cell;
+    int8_t negativeChannel = cell + 4; // Assuming differential channels are configured this way
+    
+    // Set the channel
+    if (!setChannelDiff(positiveChannel, negativeChannel)) {
+        cellHealthStatus[cell] = false;
+        return false;
+    }
+    
+    // Synchronize
+    sync();
+    
+    // Read data
+    reading = readData();
+    
+    // Check if reading is within valid range
+    bool isValid = (reading > MIN_VALID_VALUE && reading < MAX_VALID_VALUE);
+    
+    // Check rate of change (if we have previous good readings)
+    if (isValid && lastGoodValues[cell] != 0) {
+        float change = abs(reading - lastGoodValues[cell]);
+        if (change > MAX_RATE_OF_CHANGE) {
+            isValid = false;
+        }
+    }
+    
+    // Update status and last good value if valid
+    cellHealthStatus[cell] = isValid;
+    
+    if (isValid) {
+        lastGoodValues[cell] = reading;
+        if (value != nullptr) {
+            *value = reading;
+        }
+    } else if (value != nullptr) {
+        // Return last good value if available
+        *value = lastGoodValues[cell];
+    }
+    
+    return isValid;
+}
+
+bool ADS1256::checkAllLoadCells(bool cellStatus[4]) {
+    bool allCellsOk = true;
+    
+    for (int cell = 0; cell < 4; cell++) {
+        bool status = checkLoadCellHealth(cell);
+        cellStatus[cell] = status;
+        allCellsOk &= status;
+    }
+    
+    return allCellsOk;
+}
+
+// Update readLoadCells to use health check
+bool ADS1256::readLoadCells(float values[4]) {
+    bool allReadSuccessful = true;
+    
+    for (int cell = 0; cell < 4; cell++) {
+        float reading = 0.0f;
+        bool cellOk = checkLoadCellHealth(cell, &reading);
+        values[cell] = reading;
+        
+        if (!cellOk) {
+            allReadSuccessful = false;
+        }
+    }
+    
+    return allReadSuccessful;
 }
 
 // Chip select low
@@ -275,4 +332,24 @@ int32_t ADS1256::readData() {
     }
     
     return value;
+}
+
+// Properly implement setRefVoltage
+void ADS1256::setRefVoltage(float vref) {
+    _vref = vref;
+}
+
+// Implement sync method
+void ADS1256::sync() {
+    // Wait for DRDY to go low
+    waitDRDY();
+    
+    // Send SYNC command
+    sendCommand(ADS1256_CMD_SYNC);
+    
+    // Wait for DRDY again
+    waitDRDY();
+    
+    // Send WAKEUP command to exit sync state
+    sendCommand(ADS1256_CMD_WAKEUP);
 } 

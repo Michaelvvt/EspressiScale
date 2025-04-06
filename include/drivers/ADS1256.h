@@ -99,7 +99,7 @@ public:
     void setChannel(uint8_t channel_p, uint8_t channel_n);
     
     // Set mux channel using channel pair
-    void setChannelDiff(uint8_t channel, bool differential = false);
+    bool setChannelDiff(int8_t posChannel, int8_t negChannel);
     
     // Set gain
     void setGain(uint8_t gain);
@@ -139,6 +139,16 @@ public:
     // Get current VREF value
     float getVref() { return _vref; }
     
+    // Load cell diagnostics
+    bool checkLoadCellHealth(int cell, float *value = nullptr);
+    bool checkAllLoadCells(bool cellStatus[4]);
+    
+    // Add setRefVoltage method declaration
+    void setRefVoltage(float vref);
+    
+    // Add sync method
+    void sync();
+    
 private:
     SPIClass *_spi;
     int _cs_pin;
@@ -147,6 +157,9 @@ private:
     uint8_t _gain;
     float _vref;
     float _gainValue;
+    
+    float lastGoodValues[4] = {0, 0, 0, 0}; // Store last good readings
+    bool cellHealthStatus[4] = {true, true, true, true}; // Track health of each cell
     
     // Chip select control
     void csLow();

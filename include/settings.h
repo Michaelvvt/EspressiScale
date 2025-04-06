@@ -96,6 +96,10 @@ public:
         return autoTimerMode == AutoTimerMode::AUTO;
     }
 
+    // ADS1256 calibration factors persistence
+    static void saveADS1256CalibrationFactors(float factors[4]);
+    static void loadADS1256CalibrationFactors(float factors[4]);
+
     // Static member variables - use extern for declaration only
     static Preferences preferences;
     static AutoTimerMode autoTimerMode;

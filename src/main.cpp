@@ -63,6 +63,38 @@ TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS820_SLAVE_ADDRESS);
 
 bool batteryIndicatorInitialized = false; // Track if battery indicator is initialized
 
+// BLE initialization flag
+bool bleInitialized = false;
+
+// Add forward declaration for power management functions
+void powerDownADS1256();
+void powerUpADS1256();
+
+// Add handleWakeUp function implementation before setup()
+void handleWakeUp() {
+  // Check wake-up cause
+  esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+  
+  switch(wakeup_reason) {
+    case ESP_SLEEP_WAKEUP_EXT0:
+      Serial.println("Wakeup caused by external signal using RTC_IO");
+      break;
+    case ESP_SLEEP_WAKEUP_TIMER:
+      Serial.println("Wakeup caused by timer");
+      break;
+    default:
+      Serial.println("Wakeup was not caused by deep sleep");
+      break;
+  }
+  
+  // Power up components
+  TFT_BL_ON;
+  powerUpADS1256();
+  
+  // Reset activity timer
+  last_activity_time = millis();
+}
+
 void my_print(const char *buf)
 {
   Serial.printf(buf);
@@ -316,6 +348,12 @@ void setup()
     NULL,          // Task handle
     0              // Task core
   );
+
+  // Check if waking from deep sleep
+  esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+  if (wakeup_reason != ESP_SLEEP_WAKEUP_UNDEFINED) {
+    handleWakeUp();
+  }
 }
 
 void loop()
@@ -466,46 +504,33 @@ void loop()
 
 // Helper function to properly enter deep sleep
 void enterDeepSleep() {
-  // Check if BLE is connected
-  if (isBLEConnected()) {
-    Serial.println("BLE client connected, notifying before disconnecting...");
-    
-    // Show a message on screen that we're disconnecting
-    lv_obj_clean(lv_scr_act());
-    lv_obj_t* disconnect_label = lv_label_create(lv_scr_act());
-    lv_obj_set_style_text_font(disconnect_label, &lv_font_montserrat_16, LV_PART_MAIN);
-    lv_obj_set_style_text_color(disconnect_label, lv_color_white(), LV_PART_MAIN);
-    lv_label_set_text(disconnect_label, "Disconnecting BLE...");
-    lv_obj_align(disconnect_label, LV_ALIGN_CENTER, 0, 0);
-    lv_refr_now(NULL);
-    
-    // Small delay to ensure client receives any final updates
-    delay(500);
+  // Power down the load cells to save power
+  powerDownADS1256();
+  
+  // Power down display
+  TFT_BL_OFF;
+  
+  // Stop BLE to save more power
+  if (bleInitialized) {
+    NimBLEDevice::deinit(true);
   }
-
-  // 1. Finish any pending operations
-  // 2. Close BLE connections
-  NimBLEDevice::deinit(true);
   
-  // 3. Power down peripherals
-  digitalWrite(LOADCELL_POWER_PIN, LOW); // Power down load cell
+  // Determine sleep duration based on settings
+  unsigned long sleepTime = Settings::getSleepTimeoutMs();
+  if (sleepTime == 0) { // "Never" setting
+    return; // Don't sleep, just return
+  }
   
-  // 4. Flush the screen to black before going to deep sleep
-  lv_obj_clean(lv_scr_act());
-  lv_obj_set_style_bg_color(lv_scr_act(), lv_color_black(), LV_PART_MAIN);
-  lv_refr_now(NULL); // Refresh the display immediately
+  // Convert to microseconds
+  uint64_t sleepTimeMicros = sleepTime * 1000ULL;
   
-  // 5. Display a "sleeping" message
-  lv_obj_t* sleep_label = lv_label_create(lv_scr_act());
-  lv_obj_set_style_text_font(sleep_label, &lv_font_montserrat_16, LV_PART_MAIN);
-  lv_obj_set_style_text_color(sleep_label, lv_color_white(), LV_PART_MAIN);
-  lv_label_set_text(sleep_label, "Sleeping. Touch to wake.");
-  lv_obj_align(sleep_label, LV_ALIGN_CENTER, 0, 0);
-  lv_refr_now(NULL);
+  Serial.println("Entering deep sleep mode");
+  Serial.flush();
   
-  // 6. Brief delay to ensure message is displayed
-  delay(500);
+  // Configure wake-up sources
+  esp_sleep_enable_ext0_wakeup((gpio_num_t)PIN_TOUCH_INT, 0); // Wake on touch
+  esp_sleep_enable_timer_wakeup(sleepTimeMicros); // Wake after timeout
   
-  // 7. Finally enter deep sleep
+  // Enter deep sleep
   esp_deep_sleep_start();
 }

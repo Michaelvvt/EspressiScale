@@ -503,3 +503,9 @@ void lcd_PushColors(uint16_t  x,
         SPI.endTransaction();
     }
 }
+
+void lcd_brightness(uint8_t brightness) {
+    // Set the brightness level (0-255)
+    WriteComm(0x51);  // Write to brightness register
+    WriteData(brightness);
+}

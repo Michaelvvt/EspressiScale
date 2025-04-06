@@ -18,6 +18,9 @@
 #define TFT_INVOFF    0x20
 #define TFT_INVON     0x21
 
+// Backlight control
+#define TFT_BL_ON     lcd_brightness(250)
+#define TFT_BL_OFF    lcd_brightness(0)
 
 #define TFT_SCK_H     digitalWrite(TFT_SCK, 1);
 #define TFT_SCK_L     digitalWrite(TFT_SCK, 0);
@@ -63,4 +66,5 @@ void lcd_PushColors_SoftRotation(uint16_t  x,
                                  uint8_t   r);
 
 void lcd_setRotation(uint8_t r);
+void lcd_brightness(uint8_t brightness); // 0-255
 
