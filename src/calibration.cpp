@@ -7,6 +7,7 @@
 // Forward declarations for external functions
 extern void updateUI();
 extern float getRawReading(); // Gets raw uncalibrated reading
+extern void calibrateScale(float knownWeight);
 
 // EEPROM layout for calibration
 #define CALIB_VALID_KEY 0xA6    // Validation byte for calibration
@@ -562,7 +563,14 @@ void Calibration::calculateCalibration() {
   switch (currentMode) {
     case CALIBRATION_BASIC:
       // Simple single-point calibration
-      result.linearFactor = currentRefWeight / currentRawReading;
+      // Store the calibration weight
+      calibrationWeights[1] = currentRefWeight;
+      
+      // Call the scale-specific calibration function
+      calibrateScale(currentRefWeight);
+      
+      // Calculate and store basic calibration factor
+      result.linearFactor = calculateLinearFactor();
       result.useNonLinear = false;
       result.quality = QUALITY_FAIR; // Basic is always just "fair"
       

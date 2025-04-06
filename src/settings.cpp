@@ -11,6 +11,7 @@
 Preferences Settings::preferences;
 AutoTimerMode Settings::autoTimerMode = AutoTimerMode::OFF;
 SensitivityLevel Settings::sensitivity = SensitivityLevel::LEVEL_MEDIUM;
+ScaleType Settings::scaleType = ScaleType::HX711;
 BLEProtocolMode Settings::bleProtocol = BLEProtocolMode::ESPRESSISCALE;
 BrightnessLevel Settings::brightness = BrightnessLevel::LEVEL_MEDIUM;
 SleepTimeout Settings::sleepTimeout = SleepTimeout::FIVE_MIN;
@@ -27,6 +28,11 @@ bool Settings::validateSettings() {
   
   if (static_cast<int>(sensitivity) > 2) {
     sensitivity = SensitivityLevel::LEVEL_MEDIUM;
+    changed = true;
+  }
+  
+  if (static_cast<int>(scaleType) > 1) {
+    scaleType = ScaleType::HX711;
     changed = true;
   }
   
@@ -59,6 +65,13 @@ void Settings::loadFromEEPROM() {
   // Read all settings
   autoTimerMode = static_cast<AutoTimerMode>(EEPROM.read(addr++));
   sensitivity = static_cast<SensitivityLevel>(EEPROM.read(addr++));
+  
+  // Check if we have enough data for the new setting
+  if (EEPROM.read(EEPROM_KEY_ADDR) == EEPROM_VALID_KEY && addr < EEPROM_SIZE) {
+    scaleType = static_cast<ScaleType>(EEPROM.read(addr++));
+  } else {
+    scaleType = ScaleType::HX711;
+  }
   
   // Handle legacy BLEProtocolMode values
   uint8_t rawBleProtocolValue = EEPROM.read(addr++);
@@ -101,6 +114,7 @@ void Settings::saveAll() {
   
   EEPROM.write(addr++, static_cast<uint8_t>(autoTimerMode));
   EEPROM.write(addr++, static_cast<uint8_t>(sensitivity));
+  EEPROM.write(addr++, static_cast<uint8_t>(scaleType));
   EEPROM.write(addr++, static_cast<uint8_t>(bleProtocol));
   EEPROM.write(addr++, static_cast<uint8_t>(brightness));
   EEPROM.write(addr++, static_cast<uint8_t>(sleepTimeout));
@@ -166,4 +180,13 @@ float Settings::convertWeight(float weightGrams) {
 
 const char* Settings::getWeightUnitString() {
   return weightUnit == WeightUnit::GRAM ? "g" : "oz";
+}
+
+// New accessor methods
+ScaleType Settings::getScaleType() {
+  return scaleType;
+}
+
+bool Settings::isADS1256() {
+  return scaleType == ScaleType::ADS1256;
 } 

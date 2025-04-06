@@ -18,6 +18,11 @@ enum class SensitivityLevel : uint8_t {
     LEVEL_HIGH = 2
 };
 
+enum class ScaleType : uint8_t {
+    HX711 = 0,
+    ADS1256 = 1
+};
+
 enum class BrightnessLevel : uint8_t {
     LEVEL_LOW = 0,
     LEVEL_MEDIUM = 1,
@@ -46,6 +51,7 @@ enum SettingsPage {
   PAGE_BRIGHTNESS = 3,
   PAGE_SLEEP_TIMEOUT = 4,
   PAGE_UNITS = 5,
+  PAGE_SCALE_TYPE = 6,
   PAGE_COUNT
 };
 
@@ -94,6 +100,7 @@ public:
     static Preferences preferences;
     static AutoTimerMode autoTimerMode;
     static SensitivityLevel sensitivity;
+    static ScaleType scaleType;
     static BLEProtocolMode bleProtocol;
     static BrightnessLevel brightness;
     static SleepTimeout sleepTimeout;
@@ -110,6 +117,8 @@ public:
     static bool isMetricUnits();
     static float convertWeight(float weightGrams);
     static const char* getWeightUnitString();
+    static ScaleType getScaleType();
+    static bool isADS1256();
 
 private:
     // Helper methods

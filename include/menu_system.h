@@ -244,6 +244,7 @@ private:
       lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, LV_PART_MAIN);
       
       // Position dots vertically along left edge
+      // Adjust spacing to accommodate the additional menu item
       int y_pos = 20 + (screenHeight - 40) * i / (PAGE_COUNT - 1);
       lv_obj_align(dot, LV_ALIGN_LEFT_MID, 15, y_pos - screenHeight/2);
       
@@ -452,6 +453,7 @@ private:
       case PAGE_BRIGHTNESS: return "BRIGHTNESS";
       case PAGE_SLEEP_TIMEOUT: return "SLEEP TIMEOUT";
       case PAGE_UNITS: return "UNITS";
+      case PAGE_SCALE_TYPE: return "SCALE TYPE";
       default: return "UNKNOWN";
     }
   }
@@ -464,6 +466,7 @@ private:
     static const char* brightnessOptions[] = {"LOW", "MEDIUM", "HIGH", "AUTO"};
     static const char* sleepTimeoutOptions[] = {"2 MIN", "5 MIN", "10 MIN"};
     static const char* unitOptions[] = {"GRAMS", "OUNCES"};
+    static const char* scaleTypeOptions[] = {"HX711", "ADS1256"};
     
     switch (page) {
       case PAGE_AUTO_TIMER: return autoTimerOptions;
@@ -472,6 +475,7 @@ private:
       case PAGE_BRIGHTNESS: return brightnessOptions;
       case PAGE_SLEEP_TIMEOUT: return sleepTimeoutOptions;
       case PAGE_UNITS: return unitOptions;
+      case PAGE_SCALE_TYPE: return scaleTypeOptions;
       default: return autoTimerOptions;
     }
   }
@@ -485,6 +489,7 @@ private:
       case PAGE_BRIGHTNESS: return 4;
       case PAGE_SLEEP_TIMEOUT: return 3;
       case PAGE_UNITS: return 2;
+      case PAGE_SCALE_TYPE: return 2;
       default: return 3;
     }
   }
@@ -498,6 +503,7 @@ private:
       case PAGE_BRIGHTNESS: return static_cast<int>(Settings::brightness);
       case PAGE_SLEEP_TIMEOUT: return static_cast<int>(Settings::sleepTimeout);
       case PAGE_UNITS: return static_cast<int>(Settings::weightUnit);
+      case PAGE_SCALE_TYPE: return static_cast<int>(Settings::scaleType);
       default: return 0;
     }
   }
@@ -527,6 +533,14 @@ private:
       case PAGE_UNITS:
         Settings::weightUnit = static_cast<WeightUnit>(option);
         break;
+      case PAGE_SCALE_TYPE:
+        // Only update if value changed to avoid unnecessary reinitialization
+        if (Settings::scaleType != static_cast<ScaleType>(option)) {
+          Settings::scaleType = static_cast<ScaleType>(option);
+          // Restart the scale subsystem to apply new ADC type
+          reinitializeScale();
+        }
+        break;
     }
     
     // Save settings immediately
@@ -541,6 +555,15 @@ private:
   // Update screen brightness
   static void updateBrightness() {
     // Would need to be implemented if hardware supports it
+  }
+  
+  // Restart the scale subsystem
+  static void reinitializeScale() {
+    // Forward declaration - this will need to be implemented in scale.cpp
+    extern void reinitializeScale();
+    
+    // Call the scale reinitialization function
+    ::reinitializeScale();
   }
 };
 

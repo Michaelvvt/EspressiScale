@@ -61,3 +61,9 @@
 #define LOADCELL_DOUT_PIN  4     // HX711 data pin 
 #define LOADCELL_SCK_PIN   3     // HX711 clock pin
 #define LOADCELL_POWER_PIN 6     // Power control pin for load cell
+
+// ADS1256 pins - using existing SPI pins where possible
+#define ADS1256_CS_PIN   5       // ADS1256 chip select pin
+#define ADS1256_DRDY_PIN 7       // ADS1256 data ready pin
+#define ADS1256_RESET_PIN 8      // ADS1256 reset pin
+// We can reuse SPI pins for MOSI/MISO/SCK shared with the display
