@@ -179,9 +179,9 @@ float getRawReadingADS1256() {
   return totalRaw;
 }
 
-// Forward declarations for ADS1256 functions
+// Forward declarations for ADS1256 functions - Fix the return type
 void tareADS1256();
-void updateADS1256();
+float updateADS1256();
 float getRawReadingADS1256();
 void calibrateADS1256(float knownWeight);
 
@@ -241,10 +241,10 @@ void calibrateADS1256(float knownWeight) {
 
 // Function to calibrate the scale with a known weight
 void calibrateScale(float knownWeight) {
-    if (Settings::scaleType == SCALE_TYPE_HX711) {
+    if (Settings::scaleType == ScaleType::HX711) {
         // Existing HX711 calibration code could go here
         // Currently not implemented
-    } else if (Settings::scaleType == SCALE_TYPE_ADS1256) {
+    } else if (Settings::scaleType == ScaleType::ADS1256) {
         calibrateADS1256(knownWeight);
     }
 }
